@@ -7,7 +7,7 @@ You can think of this project as a mini intepreter but for math or simply a calc
 Execute the bash command below to compile the code:
 
 ``` bash
-$ c3c compile calc_intepret.c3
+$ c3c compile calc_intepret.c3 ./mylib
 ```
 
 Next execute the bash command below to run it:
@@ -21,5 +21,5 @@ $ ./calc_intepret.c3
     To compile and run the code together use the command below:
 
     ``` bash
-    $ c3c compile-run calc_interpret.c3
+    $ c3c compile-run calc_interpret.c3 ./mylib
     ```
