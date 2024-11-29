@@ -134,8 +134,8 @@ fn Token! Lexer.next(Lexer* this) {
             }
     }
     
-    io::printfn("bot: %d", this.bot);
-    io::printfn("cursor: %d\n", this.cursor);
+    // io::printfn("bot: %d", this.bot);
+    // io::printfn("cursor: %d\n", this.cursor);
     token.value = this.content[this.bot .. this.cursor];
     this.cursor++;
     this.bot = this.cursor;
