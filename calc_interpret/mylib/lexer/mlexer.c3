@@ -3,25 +3,30 @@ module mylib::lexer::mlexer;
 import std::ascii;
 import std::io;
 
+fault NonTokenFault
+{
+    WHITESPACE_FAULT
+}
+
 enum Token_Kind {
     END,
     INVALID_TOKEN,
-    IDENTIFIER, // x, a, b
-    KEYWORD,    // => cos, sin, tan
-    SEMI_COLON,
-    CLOSE_PARENTHESIS,
-    OPEN_PARENTHESIS,
-    OPERATOR_ADD,     // +
-    OPERATOR_SUB,     // -
-    OPERATOR_DIV,     // /
-    OPERATOR_MULT,     // *
-    OPERATOR_MOD,     // %
-    NUMBER,      // 1, 2, 6.02e23
-    COMMENT,
-    WHITESPACE
+    IDENTIFIER,         // x, a, b
+    KEYWORD,            // => cos, sin, tan
+    SEMI_COLON,         // ;
+    CLOSE_PARENTHESIS,  // )
+    OPEN_PARENTHESIS,   // (
+    OPERATOR_ADD,       // +
+    OPERATOR_SUB,       // -
+    OPERATOR_DIV,       // /
+    OPERATOR_MULT,      // *
+    OPERATOR_MOD,       // %
+    NUMBER,             // 1, 2, 6.02e23
+    POWER,             // ^
+    COMMENT,            // #
 }
 
-const String[*] KEYWORDS = {"cos", "sin", "tan", "atan", "atan2"};
+const String[*] KEYWORDS = {"cos", "sin", "tan", "atan", "atan2", "sqrt"};
 
 struct Token {
     Token_Kind type;
@@ -84,7 +89,7 @@ fn Token! Lexer.next(Lexer* this) {
             String search_string = this.content[this.cursor .. look_ahead];
             usz! found_index = array::index_of(KEYWORDS, search_string);
             if (catch err = found_index) {
-                io::eprintf("Error: '%s' is not a keyword. Keywords are: ", search_string);
+                io::eprintf("[Lexer] Error: '%s' is not a keyword. Keywords are: ", search_string);
                 io::eprintn(KEYWORDS);
                 io::eprintfn("\tIf your intention was an identifier, then use single letters, e.g., 'x', 'y', etc.");
                 io::eprintfn("\tElse you could just say x*y or m*n, instead of xy and mn 😎");
@@ -97,6 +102,12 @@ fn Token! Lexer.next(Lexer* this) {
             token.type = Token_Kind.IDENTIFIER;
         }
 
+    }
+    else if (ascii::is_space(val)) {
+        // io::printfn("space: '%c'", val);
+        this.cursor++;
+        this.bot = this.cursor;
+        return NonTokenFault.WHITESPACE_FAULT?;
     }
     else {
             //TODO: Rewrite for maintainability
@@ -116,13 +127,15 @@ fn Token! Lexer.next(Lexer* this) {
                     token.type = Token_Kind.OPERATOR_DIV;
                 case '%':
                     token.type = Token_Kind.OPERATOR_MOD;
+                case '^':
+                    token.type = Token_Kind.POWER;
                 default:
                     token.type = Token_Kind.INVALID_TOKEN;
             }
     }
     
-    // io::printfn("bot: %d", this.bot);
-    // io::printfn("cursor: %d\n", this.cursor);
+    io::printfn("bot: %d", this.bot);
+    io::printfn("cursor: %d\n", this.cursor);
     token.value = this.content[this.bot .. this.cursor];
     this.cursor++;
     this.bot = this.cursor;
