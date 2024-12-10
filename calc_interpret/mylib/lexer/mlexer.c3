@@ -24,6 +24,7 @@ enum Token_Kind {
     NUMBER,             // 1, 2, 6.02e23
     POWER,             // ^
     COMMENT,            // #
+    WHITESPACE
 }
 
 const String[*] KEYWORDS = {"cos", "sin", "tan", "atan", "atan2", "sqrt"};
@@ -105,9 +106,14 @@ fn Token! Lexer.next(Lexer* this) {
     }
     else if (ascii::is_space(val)) {
         // io::printfn("space: '%c'", val);
-        this.cursor++;
-        this.bot = this.cursor;
-        return NonTokenFault.WHITESPACE_FAULT?;
+        while(ascii::is_space(val)) {
+            look_ahead++;
+            if (look_ahead >= this.content.len) break;
+            val = this.content[look_ahead];
+        }
+        token.type = Token_Kind.WHITESPACE;
+        look_ahead--; // hack: deals with overstepped cursor
+        this.cursor = look_ahead;
     }
     else {
             //TODO: Rewrite for maintainability

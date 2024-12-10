@@ -3,6 +3,7 @@ module calc_interpret;
 import std::io;
 import std::collections::list;
 import mylib::lexer::mlexer;
+import mylib::parser::mparser;
 
 def TokenList_t = List(<mlexer::Token>);
 
@@ -18,41 +19,53 @@ fn void! main()
         io::printn("Oops...something went wrong!");
         return excuse?;
     }
-    io::printfn("Your input: %s", user_input);
+    // io::printfn("Your input: %s", user_input);
 
     // Parse the Input
     String trimmed_input = user_input.trim();
     usz input_length = trimmed_input.len;
-    io::printfn("Trimmed input:%s", trimmed_input);
-    io::printfn("Trimmed input Length: %d", input_length);
+    io::printfn("Trimmed input:%s\n", trimmed_input);
+    // io::printfn("Trimmed input Length: %d", input_length);
 
     // 1. Lexer
     mlexer::Lexer lexer;
     lexer.init(user_input);
 
-    // 2. Tokenize    
-    TokenList_t tokens;
-    tokens.new_init();
-    defer tokens.free();
+    // Parse
+    mparser::Mparser parser;
+    parser.init(&lexer);
 
-    while(lexer.cursor < lexer.content.len) {
+    ASTNode*! ast = parser.parse();
 
-        mlexer::Token! retrieved_token = lexer.next();
-        if (catch err = retrieved_token) {
-            case NonTokenFault.WHITESPACE_FAULT:
-                io::printn("[Lexer] Whitespace encountered. Skipping.. 😎");
-                continue;
-            default:
-                return;
+    if (catch err = ast) {
+        io::eprint("[Main Exec] Somthing went wrong..\t");
+        io::eprintn(err);
+        return err?;
+    }
+
+    defer parser.free(ast);
+    io::printn("\nResults:\n------");
+    parser.print_tree(ast, 0);
+
+    // 2. Testing Tokenization    
+    // TokenList_t tokens;
+    // tokens.new_init();
+    // defer tokens.free();
+
+    // while(lexer.cursor < lexer.content.len) {
+
+    //     mlexer::Token! retrieved_token = lexer.next();
+    //     if (catch err = retrieved_token) {
+    //         return err?;
             
-        }
-        tokens.push(retrieved_token);
-    }
+    //     }
+    //     tokens.push(retrieved_token);
+    // }
 
 
-    io::printn("\nTokens:\n-------");
-    foreach (toke : tokens)
-    {
-        toke.print();
-    }
+    // io::printn("\nTokens:\n-------");
+    // foreach (toke : tokens)
+    // {
+    //     toke.print();
+    // }
 }
