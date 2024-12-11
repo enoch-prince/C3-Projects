@@ -61,14 +61,14 @@ struct Mparser{
     Token current_token;
 }
 
-fn void Mparser.init(Mparser* this, Lexer* lexer, Allocator allocator = allocator::heap()) {
+fn void! Mparser.init(Mparser* this, Lexer* lexer, Allocator allocator = allocator::heap()) {
     this.allocator = allocator;
     this.lexer = lexer;
-    this.current_token = this.lexer.next()!!;
+    this.current_token = this.lexer.next()!;
 }
 
-fn void Mparser.temp_init(Mparser* this, Lexer* lexer) {
-    this.init(lexer, allocator::temp());
+fn void! Mparser.temp_init(Mparser* this, Lexer* lexer) {
+    this.init(lexer, allocator::temp())!;
 }
 
 fn ASTNode*! Mparser.parse(Mparser* this) {

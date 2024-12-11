@@ -33,7 +33,7 @@ fn void! main()
 
     // Parse
     mparser::Mparser parser;
-    parser.init(&lexer);
+    parser.init(&lexer)!;
 
     ASTNode*! ast = parser.parse();
 
