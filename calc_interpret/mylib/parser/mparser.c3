@@ -86,9 +86,13 @@ fn void! Mparser.advance(Mparser* this) @private {
     this.current_token.print();
 }
 
-fn void! Mparser.expect(Mparser* this, Token_Kind token_type) @private {
-    if (this.current_token.type != token_type) {
-        io::eprintf("[Mparser] Syntax Error: Expected token type %d, but got %d\n", token_type, this.current_token.type);
+fn void! Mparser.expect(Mparser* this, Token token) @private {
+    if (this.current_token.type != token.type) {
+        if (!this.current_token.value) {
+            this.current_token.value = "NULL";
+            token.pos = this.lexer.cursor;
+        }
+        io::eprintf("[Mparser] Math Syntax Error: Expected token '%s' at position %d, but got '%s'\n", token.value, token.pos, this.current_token.value);
         return PaserFault.MATH_SYNTAX_ERROR?;
     }
     this.advance()!;
@@ -220,7 +224,7 @@ fn ASTNode*! Mparser.parse_finp(Mparser* this) @private {
         io::printfn("%s", this.current_token.type);
         this.advance()!; // skip '('
         ASTNode* parse_node = this.parse_expression()!;
-        this.expect(Token_Kind.CLOSE_PARENTHESIS)!;
+        this.expect({.type=Token_Kind.CLOSE_PARENTHESIS, .value=")", .pos=this.current_token.pos})!;
         io::printn("PARSE_FINP_END");
         return parse_node;
     case Token_Kind.KEYWORD:
@@ -247,9 +251,9 @@ fn ASTNode*! Mparser.parse_function(Mparser* this) @private {
     ASTNode* node = this.alloc_node();
     *node = { .type = AST_FUNCION_CALL, .value = this.current_token.value, .left = null, .right = null };
     this.advance()!;
-    this.expect(Token_Kind.OPEN_PARENTHESIS)!;
+    this.expect({.type=Token_Kind.OPEN_PARENTHESIS, .value="(", .pos=this.current_token.pos})!;
     node.left = this.parse_expression()!;
-    this.expect(Token_Kind.CLOSE_PARENTHESIS)!;
+    this.expect({.type=Token_Kind.CLOSE_PARENTHESIS, .value=")", .pos=this.current_token.pos})!;
     io::printn("PARSE_FUNCTION_END");
     return node;
 }
