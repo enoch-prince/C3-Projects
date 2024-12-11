@@ -38,7 +38,7 @@ fn void! main()
     ASTNode*! ast = parser.parse();
 
     if (catch err = ast) {
-        io::eprint("[Main Exec] Somthing went wrong..\t");
+        io::eprint("[Main Exec] Somthing went wrong.. ");
         io::eprintn(err);
         return err?;
     }

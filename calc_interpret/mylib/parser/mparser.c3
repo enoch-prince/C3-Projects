@@ -54,8 +54,10 @@ struct ASTNode{
     ASTNode* right;
 }
 
+struct Private @private { int parenthesis_count; }
 
 struct Mparser{
+    inline Private private_field;
     Allocator allocator;
     Lexer* lexer;
     Token current_token;
@@ -65,6 +67,7 @@ fn void! Mparser.init(Mparser* this, Lexer* lexer, Allocator allocator = allocat
     this.allocator = allocator;
     this.lexer = lexer;
     this.current_token = this.lexer.next()!;
+    this.parenthesis_count = 0;
 }
 
 fn void! Mparser.temp_init(Mparser* this, Lexer* lexer) {
@@ -72,18 +75,31 @@ fn void! Mparser.temp_init(Mparser* this, Lexer* lexer) {
 }
 
 fn ASTNode*! Mparser.parse(Mparser* this) {
-    // parse the expression
     return this.parse_expression()!;
 
 }
 
 fn void! Mparser.advance(Mparser* this) @private {
     this.current_token = this.lexer.next()!;
+    if (this.current_token.type == Token_Kind.OPEN_PARENTHESIS ||
+        this.current_token.type == Token_Kind.CLOSE_PARENTHESIS) {
+        this.parenthesis_count = (this.current_token.type == Token_Kind.OPEN_PARENTHESIS) ? this.parenthesis_count+1:this.parenthesis_count-1;
+        // io::printfn("[Mparser] Parenthesis Count %d", this.parenthesis_count);
+    }
     if (this.current_token.type == Token_Kind.WHITESPACE) {
         this.advance()!;
     }
-    io::print("\n[Mparser] Current Token: ");
-    this.current_token.print();
+    if (this.parenthesis_count < 0) {
+        // expected a '(' before expression
+        io::eprintf("[Mparser] MATH SYNTAX ERROR: unexpected symbol '%s' at position %d\n", this.current_token.value, this.current_token.pos);
+        return PaserFault.MATH_SYNTAX_ERROR?;
+    }
+    else if (this.parenthesis_count > 0 && this.lexer.cursor >= this.lexer.content.len) {
+        // expected a ')' after expression
+        io::eprintf("[Mparser] MATH SYNTAX ERROR: expected symbol ')' at position %d\n", this.current_token.pos);
+        return PaserFault.MATH_SYNTAX_ERROR?;
+    }
+    
 }
 
 fn void! Mparser.expect(Mparser* this, Token token) @private {
@@ -152,7 +168,7 @@ fn void Mparser.print_tree(&self, ASTNode* node, int depth = 0)
 Handles '+' and '-' expressions
 *>
 fn ASTNode*! Mparser.parse_expression(Mparser* this) @private {
-    io::printn("Parsing expression: '+' or '-' ");
+    // io::printn("Parsing expression: '+' or '-' ");
     ASTNode* node = this.parse_div_mult_mod()!;
     ASTNode* main_node = this.alloc_node();
     main_node.type = AST_NONE;
@@ -160,11 +176,11 @@ fn ASTNode*! Mparser.parse_expression(Mparser* this) @private {
     while (this.current_token.type == Token_Kind.OPERATOR_ADD || 
             this.current_token.type == Token_Kind.OPERATOR_SUB) {
                 String current_token_value = this.current_token.value;
-                this.advance()!!;
+                this.advance()!;
                 ASTNode* right_node = this.parse_div_mult_mod()!;
                 *main_node = { .type = AST_BINARY_OP, .value = current_token_value, .left = node, .right = right_node };
             }
-    io::printn("PARSE_EXPR_END");
+    // io::printn("PARSE_EXPR_END");
     if (main_node.type == AST_NONE) { 
         this.free(main_node);
         return node; 
@@ -176,7 +192,7 @@ fn ASTNode*! Mparser.parse_expression(Mparser* this) @private {
 Handles '/', '*' and '%' expressions
 *>
 fn ASTNode*! Mparser.parse_div_mult_mod(Mparser* this) @private {
-    io::printn("Parsing div, mult & mod: '/','*' or '%' ");
+    // io::printn("Parsing div, mult & mod: '/','*' or '%' ");
     ASTNode* node = this.parse_finp()!;
     ASTNode* main_node = this.alloc_node();
     main_node.type = AST_NONE;
@@ -186,11 +202,11 @@ fn ASTNode*! Mparser.parse_div_mult_mod(Mparser* this) @private {
            this.current_token.type == Token_Kind.OPERATOR_MOD) 
         {
             String current_token_value = this.current_token.value;
-            this.advance()!!;
+            this.advance()!;
             ASTNode* right_node = this.parse_finp()!;
             *main_node = { .type = AST_BINARY_OP, .value = current_token_value, .left = node, .right = right_node };
         }
-    io::printn("PARSE_DIV_MUL_MOD_END");
+    // io::printn("PARSE_DIV_MUL_MOD_END");
     if (main_node.type == AST_NONE) { 
         this.free(main_node);
         return node; 
@@ -202,43 +218,43 @@ fn ASTNode*! Mparser.parse_div_mult_mod(Mparser* this) @private {
 Handles Functions, Identifiers, Numbers, Parenthesis (FINP)
 *>
 fn ASTNode*! Mparser.parse_finp(Mparser* this) @private {
-    io::print("Parsing finp: ");
+    // io::print("Parsing finp: ");
 
     switch (this.current_token.type)
     {
     case Token_Kind.NUMBER:
         ASTNode* node = this.alloc_node();
         *node = { .type = AST_NUMBER, .value = this.current_token.value, .left = null, .right = null };
-        io::printfn("%s -> %s", this.current_token.type, this.current_token.value);
+        // io::printfn("%s -> %s", this.current_token.type, this.current_token.value);
         this.advance()!;
-        io::printn("PARSE_FINP_END");
+        // io::printn("PARSE_FINP_END");
         return node;
     case Token_Kind.IDENTIFIER:
         ASTNode* node = this.alloc_node();
         *node = { .type = AST_IDENTIFIER, .value = this.current_token.value, .left = null, .right = null };
-        io::printfn("%s", this.current_token.type);
+        // io::printfn("%s", this.current_token.type);
         this.advance()!;
-        io::printn("PARSE_FINP_END");
+        // io::printn("PARSE_FINP_END");
         return node;
     case Token_Kind.OPEN_PARENTHESIS:
-        io::printfn("%s", this.current_token.type);
+        // io::printfn("%s", this.current_token.type);
         this.advance()!; // skip '('
         ASTNode* parse_node = this.parse_expression()!;
         this.expect({.type=Token_Kind.CLOSE_PARENTHESIS, .value=")", .pos=this.current_token.pos})!;
-        io::printn("PARSE_FINP_END");
+        // io::printn("PARSE_FINP_END");
         return parse_node;
     case Token_Kind.KEYWORD:
-        io::printf("%s", this.current_token.type);
+        // io::printf("%s", this.current_token.type);
         ASTNode* parse_node = this.parse_function()!;
-        io::printn("PARSE_FINP_END");
+        // io::printn("PARSE_FINP_END");
         return parse_node;
     case Token_Kind.END:
-        io::printfn("%s", this.current_token.type);
-        io::printn("PARSE_FINP_END");
+        // io::printfn("%s", this.current_token.type);
+        // io::printn("PARSE_FINP_END");
         return null;
     default:
-        io::eprintf("[Mparser] Invalid Symbol: '%s'\n", this.current_token.type);
-        io::printn("PARSE_FINP_END");
+        io::eprintf("[Mparser] ERROR: Invalid Symbol '%s'\n", this.current_token.type);
+        // io::printn("PARSE_FINP_END");
         return PaserFault.INVALID_SYMBOL?;   
     }
 }
@@ -247,14 +263,14 @@ fn ASTNode*! Mparser.parse_finp(Mparser* this) @private {
 Handles function like sin, cos, tan, etc..
 *>
 fn ASTNode*! Mparser.parse_function(Mparser* this) @private {
-    io::printfn(" -> %s", this.current_token.value);
+    // io::printfn(" -> %s", this.current_token.value);
     ASTNode* node = this.alloc_node();
     *node = { .type = AST_FUNCION_CALL, .value = this.current_token.value, .left = null, .right = null };
     this.advance()!;
     this.expect({.type=Token_Kind.OPEN_PARENTHESIS, .value="(", .pos=this.current_token.pos})!;
     node.left = this.parse_expression()!;
     this.expect({.type=Token_Kind.CLOSE_PARENTHESIS, .value=")", .pos=this.current_token.pos})!;
-    io::printn("PARSE_FUNCTION_END");
+    // io::printn("PARSE_FUNCTION_END");
     return node;
 }
 
