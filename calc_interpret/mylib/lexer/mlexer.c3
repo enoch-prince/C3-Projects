@@ -88,6 +88,7 @@ fn Token! Lexer.next(Lexer* this) {
         look_ahead--; // hack: deals with overstepped cursor
         if (look_ahead > this.cursor) {
             String search_string = this.content[this.cursor .. look_ahead];
+            search_string.convert_ascii_to_lower();
             usz! found_index = array::index_of(KEYWORDS, search_string);
             if (catch err = found_index) {
                 io::eprintf("[Lexer] Error: '%s' is not a keyword. Keywords are: ", search_string);
