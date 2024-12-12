@@ -4,6 +4,10 @@ import std::io;
 import std::collections::list;
 import mylib::lexer::mlexer;
 import mylib::parser::mparser;
+import mylib::evaluator::mevaluator;
+
+// TODO: implement parser for unary operator
+// TODO: implement tokenization for 10e5 or 10^5, 10e-5 or 10^(-5) or 10^-5
 
 def TokenList_t = List(<mlexer::Token>);
 
@@ -44,8 +48,17 @@ fn void! main()
     }
 
     defer parser.free(ast);
-    io::printn("\nResults:\n------");
+    io::printn("\nAST:\n------");
     parser.print_tree(ast, 0);
+
+    double! result = mevaluator::mevaluate(ast);
+    if (catch err = result) {
+        io::eprint("[Main Exec] Somthing went wrong.. ");
+        io::eprintn(err);
+        return err?;
+    }
+    io::printn("\nResults:\n------");
+    io::printfn("[Evaluator] %s = %.2f", trimmed_input, result);
 
     // 2. Testing Tokenization    
     // TokenList_t tokens;
