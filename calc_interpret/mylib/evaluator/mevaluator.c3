@@ -22,6 +22,8 @@ fn double! mevaluate(ASTNode* node) {
                     return left / right;
                 case "*":
                     return left * right;
+                case "%":
+                    return left % right;
                 default:
                     break;
                 
