@@ -23,7 +23,13 @@ fn double! mevaluate(ASTNode* node) {
                 case "*":
                     return left * right;
                 case "%":
-                    return left % right;
+                    // ref: https://stackoverflow.com/a/52529440
+                    double res = left % right;
+                    if (res < 0) {
+                        // res += (right < 0) ? -right : right; // avoid this form: it is UB when b == INT_MIN
+                        res = (right < 0) ? res - right : res + right;
+                    }
+                    return res;
                 default:
                     break;
                 

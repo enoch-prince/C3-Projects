@@ -66,8 +66,9 @@ struct Mparser{
 fn void! Mparser.init(Mparser* this, Lexer* lexer, Allocator allocator = allocator::heap()) {
     this.allocator = allocator;
     this.lexer = lexer;
-    this.current_token = this.lexer.next()!;
+    // this.current_token = this.lexer.next()!;
     this.parenthesis_count = 0;
+    this.advance()!;
 }
 
 fn void! Mparser.temp_init(Mparser* this, Lexer* lexer) {
@@ -84,7 +85,7 @@ fn void! Mparser.advance(Mparser* this) @private {
     if (this.current_token.type == Token_Kind.OPEN_PARENTHESIS ||
         this.current_token.type == Token_Kind.CLOSE_PARENTHESIS) {
         this.parenthesis_count = (this.current_token.type == Token_Kind.OPEN_PARENTHESIS) ? this.parenthesis_count+1:this.parenthesis_count-1;
-        // io::printfn("[Mparser] Parenthesis Count %d", this.parenthesis_count);
+        io::printfn("[Mparser] Parenthesis Count %d", this.parenthesis_count);
     }
     if (this.current_token.type == Token_Kind.WHITESPACE) {
         this.advance()!;
@@ -175,10 +176,17 @@ fn ASTNode*! Mparser.parse_expression(Mparser* this) @private {
 
     while (this.current_token.type == Token_Kind.OPERATOR_ADD || 
             this.current_token.type == Token_Kind.OPERATOR_SUB) {
+                ASTNode* next_node = null;
+                if (main_node.type != AST_NONE) { // iteration after first
+                    next_node = this.alloc_node();
+                    *next_node = { .type=main_node.type, .value=main_node.value, .left=main_node.left, .right=main_node.right };
+                }
                 String current_token_value = this.current_token.value;
                 this.advance()!;
                 ASTNode* right_node = this.parse_div_mult_mod()!;
-                *main_node = { .type = AST_BINARY_OP, .value = current_token_value, .left = node, .right = right_node };
+
+                *main_node = { .type = AST_BINARY_OP, .value = current_token_value, .left = (!next_node)?node:next_node, .right = right_node };
+                
             }
     // io::printn("PARSE_EXPR_END");
     if (main_node.type == AST_NONE) { 
