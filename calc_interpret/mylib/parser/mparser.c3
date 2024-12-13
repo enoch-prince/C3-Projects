@@ -205,14 +205,19 @@ fn ASTNode*! Mparser.parse_div_mult_mod(Mparser* this) @private {
     ASTNode* main_node = this.alloc_node();
     main_node.type = AST_NONE;
 
-    if (this.current_token.type == Token_Kind.OPERATOR_DIV || 
+    while (this.current_token.type == Token_Kind.OPERATOR_DIV || 
            this.current_token.type == Token_Kind.OPERATOR_MULT ||
            this.current_token.type == Token_Kind.OPERATOR_MOD) 
         {
+            ASTNode* next_node = null;
+            if (main_node.type != AST_NONE) { // handle subsequent iterations
+                next_node = this.alloc_node();
+                *next_node = { .type=main_node.type, .value=main_node.value, .left=main_node.left, .right=main_node.right };
+            }
             String current_token_value = this.current_token.value;
             this.advance()!;
             ASTNode* right_node = this.parse_finp()!;
-            *main_node = { .type = AST_BINARY_OP, .value = current_token_value, .left = node, .right = right_node };
+            *main_node = { .type = AST_BINARY_OP, .value = current_token_value, .left = (!next_node)?node:next_node, .right = right_node };
         }
     // io::printn("PARSE_DIV_MUL_MOD_END");
     if (main_node.type == AST_NONE) { 
