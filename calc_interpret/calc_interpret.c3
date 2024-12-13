@@ -6,13 +6,6 @@ import mylib::lexer::mlexer;
 import mylib::parser::mparser;
 import mylib::evaluator::mevaluator;
 
-// TODO: Fix:
-    // Input:((1+2-3*6)/2)%2
-
-    // [Mparser] MATH SYNTAX ERROR: unexpected symbol ')' at position 12
-    // [Main Exec] Somthing went wrong.. MATH_SYNTAX_ERROR
-    // Program completed with exit code 1.
-
 // TODO: implement parser for unary operator
 // TODO: implement tokenization for 10e5 or 10^5, 10e-5 or 10^(-5) or 10^-5
 // TODO: implement parser for '^' and 'e'

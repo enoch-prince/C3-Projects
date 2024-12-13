@@ -9,6 +9,16 @@ fn double! mevaluate(ASTNode* node) {
     {
         case AST_NUMBER:
             return node.value.to_double()!;
+        case AST_UNARY_OP:
+            double left = mevaluate(node.left)!;
+            switch (node.value) {
+                case "+":
+                    return left;
+                case "-":
+                    return -left;
+                default:
+                    break;
+            }
         case AST_BINARY_OP:
             double left = mevaluate(node.left)!;
             double right = mevaluate(node.right)!;

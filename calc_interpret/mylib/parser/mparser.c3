@@ -235,6 +235,14 @@ fn ASTNode*! Mparser.parse_finp(Mparser* this) @private {
 
     switch (this.current_token.type)
     {
+    case Token_Kind.OPERATOR_ADD:
+    case Token_Kind.OPERATOR_SUB:
+        ASTNode* node = this.alloc_node();
+        String current_value = this.current_token.value;
+        this.advance()!;
+        ASTNode* parse_node = this.parse_finp()!;
+        *node = { .type = AST_UNARY_OP, .value = current_value, .left = parse_node, .right = null };
+        return node;
     case Token_Kind.NUMBER:
         ASTNode* node = this.alloc_node();
         *node = { .type = AST_NUMBER, .value = this.current_token.value, .left = null, .right = null };
