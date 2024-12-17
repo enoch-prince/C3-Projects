@@ -6,7 +6,6 @@ import mylib::lexer::mlexer;
 import mylib::parser::mparser;
 import mylib::evaluator::mevaluator;
 
-// TODO: implement parser for unary operator
 // TODO: implement tokenization for 10e5 or 10^5, 10e-5 or 10^(-5) or 10^-5
 // TODO: implement parser for '^' and 'e'
 
