@@ -22,7 +22,7 @@ enum Token_Kind {
     OPERATOR_MULT,      // *
     OPERATOR_MOD,       // %
     NUMBER,             // 1, 2, 6.02e23
-    POWER,             // ^
+    POWER,             // ^, e, E
     COMMENT,            // #
     WHITESPACE
 }
@@ -101,7 +101,13 @@ fn Token! Lexer.next(Lexer* this) {
             this.cursor = look_ahead;
         }
         else {
-            token.type = Token_Kind.IDENTIFIER;
+            val = this.content[look_ahead]; // this is needed since look ahead was modified by the hack
+            if (val == 'e' || val == 'E') {
+                token.type = Token_Kind.POWER;
+            }
+            else {
+                token.type = Token_Kind.IDENTIFIER;
+            }
         }
 
     }

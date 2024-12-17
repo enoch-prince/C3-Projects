@@ -207,15 +207,22 @@ fn ASTNode*! Mparser.parse_div_mult_mod(Mparser* this) @private {
 
     while (this.current_token.type == Token_Kind.OPERATOR_DIV || 
            this.current_token.type == Token_Kind.OPERATOR_MULT ||
-           this.current_token.type == Token_Kind.OPERATOR_MOD) 
+           this.current_token.type == Token_Kind.OPERATOR_MOD || 
+           this.current_token.type == Token_Kind.POWER) 
         {
             ASTNode* next_node = null;
             if (main_node.type != AST_NONE) { // handle subsequent iterations
                 next_node = this.alloc_node();
                 *next_node = { .type=main_node.type, .value=main_node.value, .left=main_node.left, .right=main_node.right };
             }
-            String current_token_value = this.current_token.value;
-            this.advance()!;
+            String current_token_value = "";
+            if (this.current_token.type == Token_Kind.POWER) {
+                current_token_value = "*";
+            }
+            else {
+                current_token_value = this.current_token.value;
+                this.advance()!;
+            }
             ASTNode* right_node = this.parse_finp()!;
             *main_node = { .type = AST_BINARY_OP, .value = current_token_value, .left = (!next_node)?node:next_node, .right = right_node };
         }
@@ -235,6 +242,7 @@ fn ASTNode*! Mparser.parse_finp(Mparser* this) @private {
 
     switch (this.current_token.type)
     {
+    case Token_Kind.POWER:
     case Token_Kind.OPERATOR_ADD:
     case Token_Kind.OPERATOR_SUB:
         ASTNode* node = this.alloc_node();
