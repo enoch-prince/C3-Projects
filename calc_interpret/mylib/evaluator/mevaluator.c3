@@ -45,6 +45,9 @@ fn double! mevaluate(ASTNode* node) {
                     return res;
                 case "^":
                     return (double)math::pow(left, right);
+                case "e":
+                case "E":
+                    return left * (double)math::exp(right);
                 default:
                     break;
                 

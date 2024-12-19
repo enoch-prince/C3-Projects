@@ -223,7 +223,6 @@ fn ASTNode*! Mparser.parse_div_mult_mod(Mparser* this) @private {
             }
             String token_value = this.current_token.value;
             this.advance()!;
-            // ASTNode* right_node = this.parse_finp()!;
             if (this.current_token.type == Token_Kind.END) {
                 io::eprintf("[Mparser] Math Syntax Error: Expected expression after '%s'.\n", token_value);
                 return PaserFault.MATH_SYNTAX_ERROR?;
