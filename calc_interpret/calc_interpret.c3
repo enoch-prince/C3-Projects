@@ -6,7 +6,7 @@ import mylib::lexer::mlexer;
 import mylib::parser::mparser;
 import mylib::evaluator::mevaluator;
 
-// TODO: implement parser for factorial (!)
+// TODO: Fix Seg Fault for multiple factorial
 
 def TokenList_t = List(<mlexer::Token>);
 
