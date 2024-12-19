@@ -51,14 +51,14 @@ fn void! main()
     io::printn("\nAST:\n------");
     parser.print_tree(ast, 0);
 
-    // double! result = mevaluator::mevaluate(ast);
-    // if (catch err = result) {
-    //     io::eprint("[Main Exec] Somthing went wrong.. ");
-    //     io::eprintn(err);
-    //     return err?;
-    // }
-    // io::printn("\nResults:\n------");
-    // io::printfn("[Evaluator] %s = %.2f", trimmed_input, result);
+    double! result = mevaluator::mevaluate(ast);
+    if (catch err = result) {
+        io::eprint("[Main Exec] Somthing went wrong.. ");
+        io::eprintn(err);
+        return err?;
+    }
+    io::printn("\nResults:\n------");
+    io::printfn("[Evaluator] %s = %.2f", trimmed_input, result);
 
 
 

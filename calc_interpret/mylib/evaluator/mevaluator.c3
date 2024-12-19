@@ -16,6 +16,11 @@ fn double! mevaluate(ASTNode* node) {
                     return left;
                 case "-":
                     return -left;
+                case "^":
+                    break;
+                case "e":
+                case "E":
+                    return (double)math::exp(left);
                 default:
                     break;
             }
