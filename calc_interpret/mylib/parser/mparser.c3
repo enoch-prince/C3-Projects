@@ -90,6 +90,10 @@ fn void! Mparser.advance(Mparser* this) @private {
     if (this.current_token.type == Token_Kind.WHITESPACE) {
         this.advance()!;
     }
+    if (this.current_token.type == Token_Kind.INVALID_TOKEN) {
+        io::eprintf("[Mparser] INVALID SYMBOL ERROR: '%s' at position %d is an invalid symbol\n", this.current_token.value, this.current_token.pos);
+        return PaserFault.INVALID_SYMBOL?;
+    }
     if (this.parenthesis_count < 0) {
         // expected a '(' before expression
         io::eprintf("[Mparser] MATH SYNTAX ERROR: unexpected symbol '%s' at position %d\n", this.current_token.value, this.current_token.pos);
