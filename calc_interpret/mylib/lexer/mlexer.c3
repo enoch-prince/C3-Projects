@@ -22,6 +22,7 @@ enum Token_Kind {
     OPERATOR_MULT,      // *
     OPERATOR_MOD,       // %
     OPERATOR_EXP,       // e, E
+    FACTORIAL,          // !
     NUMBER,             // 1, 2, 6.02e23
     POWER,             // ^
     COMMENT,            // #
@@ -143,6 +144,8 @@ fn Token! Lexer.next(Lexer* this) {
                     token.type = Token_Kind.OPERATOR_MOD;
                 case '^':
                     token.type = Token_Kind.POWER;
+                case '!':
+                    token.type = Token_Kind.FACTORIAL;
                 default:
                     token.type = Token_Kind.INVALID_TOKEN;
             }

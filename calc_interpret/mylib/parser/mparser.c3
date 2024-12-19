@@ -82,18 +82,19 @@ fn ASTNode*! Mparser.parse(Mparser* this) {
 
 fn void! Mparser.advance(Mparser* this) @private {
     this.current_token = this.lexer.next()!;
-    if (this.current_token.type == Token_Kind.OPEN_PARENTHESIS ||
-        this.current_token.type == Token_Kind.CLOSE_PARENTHESIS) {
-        this.parenthesis_count = (this.current_token.type == Token_Kind.OPEN_PARENTHESIS) ? this.parenthesis_count+1:this.parenthesis_count-1;
-        io::printfn("[Mparser] Parenthesis Count %d", this.parenthesis_count);
-    }
     if (this.current_token.type == Token_Kind.WHITESPACE) {
         this.advance()!;
     }
     if (this.current_token.type == Token_Kind.INVALID_TOKEN) {
-        io::eprintf("[Mparser] INVALID SYMBOL ERROR: '%s' at position %d is an invalid symbol\n", this.current_token.value, this.current_token.pos);
+        io::eprintf("[Mparser] INVALID SYMBOL ERROR: '%s' at position %d is an invalid symbol.\n", this.current_token.value, this.current_token.pos);
         return PaserFault.INVALID_SYMBOL?;
     }
+    if (this.current_token.type == Token_Kind.OPEN_PARENTHESIS ||
+        this.current_token.type == Token_Kind.CLOSE_PARENTHESIS) {
+        this.parenthesis_count = (this.current_token.type == Token_Kind.OPEN_PARENTHESIS) ? this.parenthesis_count+1:this.parenthesis_count-1;
+        // io::printfn("[Mparser] Parenthesis Count %d", this.parenthesis_count);
+    }
+
     if (this.parenthesis_count < 0) {
         // expected a '(' before expression
         io::eprintf("[Mparser] MATH SYNTAX ERROR: unexpected symbol '%s' at position %d\n", this.current_token.value, this.current_token.pos);
@@ -179,7 +180,8 @@ fn ASTNode*! Mparser.parse_expression(Mparser* this) @private {
     main_node.type = AST_NONE;
 
     while (this.current_token.type == Token_Kind.OPERATOR_ADD || 
-            this.current_token.type == Token_Kind.OPERATOR_SUB) {
+            this.current_token.type == Token_Kind.OPERATOR_SUB
+            ) {
                 ASTNode* next_node = null;
                 if (main_node.type != AST_NONE) { // iteration after first
                     next_node = this.alloc_node();
@@ -192,9 +194,7 @@ fn ASTNode*! Mparser.parse_expression(Mparser* this) @private {
                     return PaserFault.MATH_SYNTAX_ERROR?;
                 }
                 ASTNode* right_node = this.parse_div_mult_mod()!;
-
                 *main_node = { .type = AST_BINARY_OP, .value = token_value, .left = (!next_node)?node:next_node, .right = right_node };
-                
             }
     // io::printn("PARSE_EXPR_END");
     if (main_node.type == AST_NONE) { 
@@ -248,7 +248,8 @@ fn ASTNode*! Mparser.parse_exponent(Mparser* this) @private {
     main_node.type = AST_NONE;
 
     while (this.current_token.type == Token_Kind.OPERATOR_EXP ||
-            this.current_token.type == Token_Kind.POWER
+            this.current_token.type == Token_Kind.POWER ||
+            this.current_token.type == Token_Kind.FACTORIAL
         ) 
     { 
         ASTNode* next_node = null;
@@ -256,14 +257,27 @@ fn ASTNode*! Mparser.parse_exponent(Mparser* this) @private {
             next_node = this.alloc_node();
             *next_node = { .type=main_node.type, .value=this.current_token.value, .left=main_node.left, .right=main_node.right };
         }
-        String token_value = this.current_token.value;
+        Token token = this.current_token;
         this.advance()!;
-        if (this.current_token.type == Token_Kind.END) {
-            io::eprintf("[Mparser] Math Syntax Error: Expected expression after '%s'.\n", token_value);
+        
+        // if (this.current_token.type == Token_Kind.END) {
+        //     io::eprintf("[Mparser] Math Syntax Error: Expected expression after '%s'.\n", token_value);
+        //     return PaserFault.MATH_SYNTAX_ERROR?;
+        // }
+        // ASTNode* right_node = this.parse_finp()!;
+        // *main_node = { .type=AST_BINARY_OP, .value=token_value, .left=(!next_node)?node:next_node, .right=right_node };
+        if (this.current_token.type == Token_Kind.END && token.type == Token_Kind.POWER) {
+            io::eprintf("[Mparser] Math Syntax Error: Expected expression after '%s'.\n", token.value);
             return PaserFault.MATH_SYNTAX_ERROR?;
         }
-        ASTNode* right_node = this.parse_finp()!;
-        *main_node = { .type=AST_BINARY_OP, .value=token_value, .left=(!next_node)?node:next_node, .right=right_node };
+        
+        if (token.type == Token_Kind.FACTORIAL) {
+            *main_node = { .type = AST_FUNCION_CALL, .value = token.value, .left = (!next_node)?node:next_node, .right = null };
+        }
+        else {
+            ASTNode* right_node = this.parse_div_mult_mod()!;
+            *main_node = { .type = AST_BINARY_OP, .value = token.value, .left = (!next_node)?node:next_node, .right = right_node };
+        }
     }
 
 
@@ -325,6 +339,7 @@ fn ASTNode*! Mparser.parse_finp(Mparser* this) @private {
     case Token_Kind.OPERATOR_MULT:
     case Token_Kind.OPERATOR_MOD:
     case Token_Kind.POWER:
+    case Token_Kind.FACTORIAL:
         io::eprintf("[Mparser] MATH SYNTAX ERROR: Expected expression before '%s' operator.\n", this.current_token.value);
         return PaserFault.MATH_SYNTAX_ERROR?;
     default:

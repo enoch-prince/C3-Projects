@@ -3,6 +3,11 @@ module mylib::evaluator::mevaluator;
 import mylib::parser::mparser;
 import std::math;
 
+fn double factorial(double x) @private {
+    if (x == 0) return 1.00;
+    return x * factorial(x-1);
+}
+
 fn double! mevaluate(ASTNode* node) {
 
     switch (node.type)
@@ -54,20 +59,25 @@ fn double! mevaluate(ASTNode* node) {
             }
         case AST_FUNCION_CALL:
             double left = mevaluate(node.left)!;
-            left = math::deg_to_rad(left);
             switch (node.value) {
                 case "sin":
+                    left = math::deg_to_rad(left);
                     return math::sin(left);
                 case "cos":
+                    left = math::deg_to_rad(left);
                     return math::cos(left);
                 case "tan":
+                    left = math::deg_to_rad(left);
                     return math::tan(left);
                 case "atan":
+                    left = math::deg_to_rad(left);
                     return math::atan(left);
                 case "atan2":
                     unreachable("atan2 unimplemented");
                 case "sqrt":
                     return math::sqrt(left);
+                case "!":
+                    return factorial(left);
                 default:
                     break;
             }
