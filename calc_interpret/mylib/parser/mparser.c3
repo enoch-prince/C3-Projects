@@ -249,7 +249,8 @@ fn ASTNode*! Mparser.parse_exponent(Mparser* this) @private {
 
     while (this.current_token.type == Token_Kind.OPERATOR_EXP ||
             this.current_token.type == Token_Kind.POWER ||
-            this.current_token.type == Token_Kind.FACTORIAL
+            this.current_token.type == Token_Kind.FACTORIAL ||
+            this.current_token.type == Token_Kind.DOUBLE_FACTORIAL
         ) 
     { 
         ASTNode* next_node = null;
@@ -270,8 +271,8 @@ fn ASTNode*! Mparser.parse_exponent(Mparser* this) @private {
             io::eprintf("[Mparser] Math Syntax Error: Expected expression after '%s'.\n", token.value);
             return PaserFault.MATH_SYNTAX_ERROR?;
         }
-        
-        if (token.type == Token_Kind.FACTORIAL) {
+
+        if (token.type == Token_Kind.FACTORIAL || token.type == Token_Kind.DOUBLE_FACTORIAL) {
             *main_node = { .type = AST_FUNCION_CALL, .value = token.value, .left = (!next_node)?node:next_node, .right = null };
         }
         else {
@@ -340,6 +341,7 @@ fn ASTNode*! Mparser.parse_finp(Mparser* this) @private {
     case Token_Kind.OPERATOR_MOD:
     case Token_Kind.POWER:
     case Token_Kind.FACTORIAL:
+    case Token_Kind.DOUBLE_FACTORIAL:
         io::eprintf("[Mparser] MATH SYNTAX ERROR: Expected expression before '%s' operator.\n", this.current_token.value);
         return PaserFault.MATH_SYNTAX_ERROR?;
     default:

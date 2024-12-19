@@ -8,6 +8,16 @@ fn double factorial(double x) @private {
     return x * factorial(x-1);
 }
 
+fn double double_factorial(double x) @private {
+    double k = 0;
+    if (math::is_odd((int)x)) {
+        k = (x + 1)/2;
+        return factorial(2*k - 1) / (math::pow(2, k-1) * factorial(k-1));
+    }
+    k = x/2;
+    return math::pow(2,k) * factorial(k);
+}
+
 fn double! mevaluate(ASTNode* node) {
 
     switch (node.type)
@@ -78,6 +88,8 @@ fn double! mevaluate(ASTNode* node) {
                     return math::sqrt(left);
                 case "!":
                     return factorial(left);
+                case "!!":
+                    return double_factorial(left);
                 default:
                     break;
             }

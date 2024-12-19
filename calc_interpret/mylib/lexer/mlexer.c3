@@ -23,6 +23,7 @@ enum Token_Kind {
     OPERATOR_MOD,       // %
     OPERATOR_EXP,       // e, E
     FACTORIAL,          // !
+    DOUBLE_FACTORIAL,   // !!
     NUMBER,             // 1, 2, 6.02e23
     POWER,             // ^
     COMMENT,            // #
@@ -124,6 +125,25 @@ fn Token! Lexer.next(Lexer* this) {
         look_ahead--; // hack: deals with overstepped cursor
         this.cursor = look_ahead;
     }
+    else if (val == '!') {
+        look_ahead++;
+        if (look_ahead >= this.content.len) {
+            look_ahead--;
+            token.type = Token_Kind.FACTORIAL;
+        }
+        else {
+            val = this.content[look_ahead];
+            if (val == '!') {
+                // we're dealing with a double factorial
+                token.type = Token_Kind.DOUBLE_FACTORIAL;
+            } 
+            else {
+                look_ahead--;
+                token.type = Token_Kind.FACTORIAL;
+            }
+        }
+        this.cursor = look_ahead;
+    }
     else {
             //TODO: Rewrite for maintainability
             switch (val)
@@ -144,8 +164,6 @@ fn Token! Lexer.next(Lexer* this) {
                     token.type = Token_Kind.OPERATOR_MOD;
                 case '^':
                     token.type = Token_Kind.POWER;
-                case '!':
-                    token.type = Token_Kind.FACTORIAL;
                 default:
                     token.type = Token_Kind.INVALID_TOKEN;
             }
