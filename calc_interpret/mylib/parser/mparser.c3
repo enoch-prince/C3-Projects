@@ -181,11 +181,15 @@ fn ASTNode*! Mparser.parse_expression(Mparser* this) @private {
                     next_node = this.alloc_node();
                     *next_node = { .type=main_node.type, .value=main_node.value, .left=main_node.left, .right=main_node.right };
                 }
-                String current_token_value = this.current_token.value;
+                String token_value = this.current_token.value;
                 this.advance()!;
+                if (this.current_token.type == Token_Kind.END) {
+                    io::eprintf("[Mparser] Math Syntax Error: Expected expression after '%s'.\n", token_value);
+                    return PaserFault.MATH_SYNTAX_ERROR?;
+                }
                 ASTNode* right_node = this.parse_div_mult_mod()!;
 
-                *main_node = { .type = AST_BINARY_OP, .value = current_token_value, .left = (!next_node)?node:next_node, .right = right_node };
+                *main_node = { .type = AST_BINARY_OP, .value = token_value, .left = (!next_node)?node:next_node, .right = right_node };
                 
             }
     // io::printn("PARSE_EXPR_END");
@@ -201,30 +205,31 @@ Handles '/', '*' and '%' expressions
 *>
 fn ASTNode*! Mparser.parse_div_mult_mod(Mparser* this) @private {
     // io::printn("Parsing div, mult & mod: '/','*' or '%' ");
-    ASTNode* node = this.parse_finp()!;
+    // ASTNode* node = this.parse_finp()!;
+    ASTNode* node = this.parse_exponent()!;
     ASTNode* main_node = this.alloc_node();
     main_node.type = AST_NONE;
 
-    while (this.current_token.type == Token_Kind.OPERATOR_DIV || 
+    while (
+           this.current_token.type == Token_Kind.OPERATOR_DIV || 
            this.current_token.type == Token_Kind.OPERATOR_MULT ||
-           this.current_token.type == Token_Kind.OPERATOR_MOD || 
-           this.current_token.type == Token_Kind.POWER) 
+           this.current_token.type == Token_Kind.OPERATOR_MOD 
+        ) 
         {
             ASTNode* next_node = null;
             if (main_node.type != AST_NONE) { // handle subsequent iterations
                 next_node = this.alloc_node();
                 *next_node = { .type=main_node.type, .value=main_node.value, .left=main_node.left, .right=main_node.right };
             }
-            String current_token_value = "";
-            if (this.current_token.type == Token_Kind.POWER) {
-                current_token_value = "*";
+            String token_value = this.current_token.value;
+            this.advance()!;
+            // ASTNode* right_node = this.parse_finp()!;
+            if (this.current_token.type == Token_Kind.END) {
+                io::eprintf("[Mparser] Math Syntax Error: Expected expression after '%s'.\n", token_value);
+                return PaserFault.MATH_SYNTAX_ERROR?;
             }
-            else {
-                current_token_value = this.current_token.value;
-                this.advance()!;
-            }
-            ASTNode* right_node = this.parse_finp()!;
-            *main_node = { .type = AST_BINARY_OP, .value = current_token_value, .left = (!next_node)?node:next_node, .right = right_node };
+            ASTNode* right_node = this.parse_exponent()!;
+            *main_node = { .type = AST_BINARY_OP, .value = token_value, .left = (!next_node)?node:next_node, .right = right_node };
         }
     // io::printn("PARSE_DIV_MUL_MOD_END");
     if (main_node.type == AST_NONE) { 
@@ -232,6 +237,38 @@ fn ASTNode*! Mparser.parse_div_mult_mod(Mparser* this) @private {
         return node; 
     }
     else { return main_node; }
+}
+
+fn ASTNode*! Mparser.parse_exponent(Mparser* this) @private {
+    ASTNode* node = this.parse_finp()!;
+    ASTNode* main_node = this.alloc_node();
+    main_node.type = AST_NONE;
+
+    while (this.current_token.type == Token_Kind.OPERATOR_EXP ||
+            this.current_token.type == Token_Kind.POWER
+        ) 
+    { 
+        ASTNode* next_node = null;
+        if (main_node.type != AST_NONE) {
+            next_node = this.alloc_node();
+            *next_node = { .type=main_node.type, .value=this.current_token.value, .left=main_node.left, .right=main_node.right };
+        }
+        String token_value = this.current_token.value;
+        this.advance()!;
+        if (this.current_token.type == Token_Kind.END) {
+            io::eprintf("[Mparser] Math Syntax Error: Expected expression after '%s'.\n", token_value);
+            return PaserFault.MATH_SYNTAX_ERROR?;
+        }
+        ASTNode* right_node = this.parse_finp()!;
+        *main_node = { .type=AST_BINARY_OP, .value=token_value, .left=(!next_node)?node:next_node, .right=right_node };
+    }
+
+
+    if (main_node.type == AST_NONE) {
+        this.free(main_node);
+        return node;
+    }
+    return main_node;
 }
 
 <* 
@@ -242,7 +279,7 @@ fn ASTNode*! Mparser.parse_finp(Mparser* this) @private {
 
     switch (this.current_token.type)
     {
-    case Token_Kind.POWER:
+    case Token_Kind.OPERATOR_EXP:
     case Token_Kind.OPERATOR_ADD:
     case Token_Kind.OPERATOR_SUB:
         ASTNode* node = this.alloc_node();
@@ -281,6 +318,12 @@ fn ASTNode*! Mparser.parse_finp(Mparser* this) @private {
         // io::printfn("%s", this.current_token.type);
         // io::printn("PARSE_FINP_END");
         return null;
+    case Token_Kind.OPERATOR_DIV:
+    case Token_Kind.OPERATOR_MULT:
+    case Token_Kind.OPERATOR_MOD:
+    case Token_Kind.POWER:
+        io::eprintf("[Mparser] MATH SYNTAX ERROR: Expected expression before '%s' operator.\n", this.current_token.value);
+        return PaserFault.MATH_SYNTAX_ERROR?;
     default:
         io::eprintf("[Mparser] ERROR: Invalid Symbol '%s'\n", this.current_token.type);
         // io::printn("PARSE_FINP_END");

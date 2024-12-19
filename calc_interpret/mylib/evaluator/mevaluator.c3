@@ -16,8 +16,6 @@ fn double! mevaluate(ASTNode* node) {
                     return left;
                 case "-":
                     return -left;
-                case "^":
-                    break;
                 case "e":
                 case "E":
                     return (double)math::exp(left);
@@ -45,6 +43,8 @@ fn double! mevaluate(ASTNode* node) {
                         res = (right < 0) ? res - right : res + right;
                     }
                     return res;
+                case "^":
+                    return (double)math::pow(left, right);
                 default:
                     break;
                 
