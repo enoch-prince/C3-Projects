@@ -234,6 +234,10 @@ fn ASTNode*! Mparser.parse_div_mult_mod(Mparser* this) @private {
             ASTNode* right_node = this.parse_exponent()!;
             *main_node = { .type = AST_BINARY_OP, .value = token_value, .left = (!next_node)?node:next_node, .right = right_node };
         }
+    if (this.current_token.type == Token_Kind.KEYWORD) {
+        ASTNode* right_node = this.parse_exponent()!;
+        *main_node = { .type = AST_BINARY_OP, .value = "*", .left = node, .right = right_node };
+    }
     // io::printn("PARSE_DIV_MUL_MOD_END");
     if (main_node.type == AST_NONE) { 
         this.free(main_node);
