@@ -126,21 +126,19 @@ fn Token! Lexer.next(Lexer* this) {
         this.cursor = look_ahead;
     }
     else if (val == '!') {
-        look_ahead++;
-        if (look_ahead >= this.content.len) {
-            look_ahead--;
-            token.type = Token_Kind.FACTORIAL;
-        }
-        else {
+        while (val == '!') {
+            look_ahead++;
+            if (look_ahead >= this.content.len) break;
             val = this.content[look_ahead];
-            if (val == '!') {
-                // we're dealing with a double factorial
-                token.type = Token_Kind.DOUBLE_FACTORIAL;
-            } 
-            else {
-                look_ahead--;
-                token.type = Token_Kind.FACTORIAL;
-            }
+        }
+        look_ahead--; // hack: deals with overstepped cursor
+        String tmp_val = this.content[this.cursor .. look_ahead];
+        if (tmp_val.len == 1) {
+            token.type = Token_Kind.FACTORIAL;
+        } else if (tmp_val.len == 2) {
+            token.type = Token_Kind.DOUBLE_FACTORIAL;
+        } else {
+            token.type = Token_Kind.INVALID_TOKEN;
         }
         this.cursor = look_ahead;
     }
